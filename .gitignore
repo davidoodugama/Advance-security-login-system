@@ -1,3 +1,7 @@
 secure/
 .ipynb_checkpoints/
 images/
+*.xml
+__init__.py
+__init__*.pyc
+*.jpg

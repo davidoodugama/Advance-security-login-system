@@ -3,6 +3,7 @@ import face_recognition
 import os
 import numpy as np
 from cvzone.FaceMeshModule import FaceMeshDetector
+from cvzone.FaceDetectionModule import FaceDetector
 from cvzone.PlotModule import LivePlot
 from cvzone import stackImages, putTextRect
 path = "images"
@@ -48,59 +49,78 @@ CEF_COUNTER = 0
 CLOSED_EYES_FRAME = 8
 TOTAL_BLINKS = 0
 color = (255, 0, 255)
+# Face Detector
+fac_detector = FaceDetector()
 while True:
     ret, frame = cap.read()
-    img = cv.resize(frame, (480,480), interpolation = cv.INTER_AREA)
-    img, faces = detector.findFaceMesh(frame, draw = False)
-    if faces:
-        face = faces[0]
-        for id in idList:
-            cv.circle(img, face[id], 5, color, cv.FILLED)
-        # 24
-        leftUp = face[159]
-        leftDown = face[23]
-        leftLeft = face[130]
-        leftRight = face[243]
+    fac_img, detected_faces = detector.findFaceMesh(frame, draw=False)
+    if detected_faces:
+        detected_face = detected_faces[0]
+        pointLeft = detected_face[145]
+        pointRight = detected_face[374]
+        cv.line(fac_img, pointLeft, pointRight, (0,200,0), 3)
+        cv.circle(fac_img, pointLeft, 5, (255,0,255), cv.FILLED)
+        cv.circle(fac_img, pointRight, 5, (255,0,255), cv.FILLED)
+        smallW, _ = detector.findDistance(pointLeft, pointRight)
+        W = 6.3 # Males 6.3cm, Females 6.2cm
 
-        lengthVer,_ = detector.findDistance(leftUp, leftDown)
-        lengthHor,_ = detector.findDistance(leftLeft, leftRight)
-        cv.line(img, leftUp, leftDown, (0,200,0), 3)
-        cv.line(img, leftLeft, leftRight, (0,200,0), 3)
-        ratio = int((lengthVer/lengthHor)* 100)
-        ratioList.append(ratio)
-        if len(ratioList) > 3:
-            ratioList.pop(0)
-        ratioAvg = sum(ratioList)/len(ratioList)
-        if ratio > 32:
-            CEF_COUNTER += 1
-            color = (255, 0, 255)
-        else:
-            if CEF_COUNTER>CLOSED_EYES_FRAME:
-                TOTAL_BLINKS += 1
-                color = (0, 200, 0)
-                CEF_COUNTER = 0
-        # putTextRect(img, f'Blink Count: {TOTAL_BLINKS}', (50,100), colorR=color)
-        # imgPlot = plotY.update(ratioAvg, color=color)
-        # cv.imshow("imgPlot",imgPlot)
-    else:
-        img = cv.resize(frame, (1000,1000), interpolation = cv.INTER_AREA)
-    # frame = cv.filter2D(src = frame, ddepth = -1, kernel = kernel)
-    # frame = cv.GaussianBlur(frame, (3,3), cv.BORDER_DEFAULT)
-    # img = cv.resize(frame, (0,0), None, 0.50, 0.50)
-    # imgCurrentFrame = cv.cvtColor(img , cv.COLOR_BGR2RGB)
-    # faceLocCurrentFrame = face_recognition.face_locations(imgCurrentFrame)
-    # encodeCurrentFrame = face_recognition.face_encodings(imgCurrentFrame, faceLocCurrentFrame)
+        # finding the focal length
+        # distance = 50
+        # f = (smallW * distance)/ W
 
-    # for encodeFace, faceLoc in zip(encodeCurrentFrame, faceLocCurrentFrame):
-    #     matches = face_recognition.compare_faces(encodeListKnown, encodeFace)
-    #     faceDis = face_recognition.face_distance(encodeListKnown, encodeFace)   
-    #     matchIndex = np.argmin(faceDis)
+        # Finding the distance of the actual face
+        f = 692
+        D = (W * f) / smallW
+        putTextRect(fac_img, f'Depth: {int(D)}cm', 
+                    (detected_face[10][0]-75,detected_face[10][1]-50),
+                    scale = 2)
+                
+    # dec_faces, fac_img = fac_detector.findFaces(img)
+    # if faces:
+    #     face = faces[0]
+    #     for id in idList:
+    #         cv.circle(img, face[id], 5, color, cv.FILLED)
+    #     leftUp = face[159]
+    #     leftDown = face[23]
+    #     leftLeft = face[130]
+    #     leftRight = face[243]
 
-    #     if matches[matchIndex]:
-    #         name = classNames[matchIndex].upper()
-    #         y1,x2,y2,x1 = faceLoc
-    #         cv.rectangle(frame, (x1*2, y1*2),(x2*2, y2*2), (0,255,0),2)
-    #         cv.rectangle(frame, (x1*2, y2*2-25),(x2*2, y2*2),(0,255,0), cv.FILLED)
-    #         cv.putText(frame, name, (x1*2 +6, y2*2-2), cv.FONT_HERSHEY_COMPLEX, 1, (255,255,255), 1)
-    cv.imshow('face', img)
+    #     lengthVer,_ = detector.findDistance(leftUp, leftDown)
+    #     lengthHor,_ = detector.findDistance(leftLeft, leftRight)
+    #     cv.line(img, leftUp, leftDown, (0,200,0), 3)
+    #     cv.line(img, leftLeft, leftRight, (0,200,0), 3)
+    #     ratio = int((lengthVer/lengthHor)* 100)
+    #     ratioList.append(ratio)
+    #     if len(ratioList) > 3:
+    #         ratioList.pop(0)
+    #     ratioAvg = sum(ratioList)/len(ratioList)
+    #     if ratio > 32:
+    #         CEF_COUNTER += 1
+    #         color = (255, 0, 255)
+    #     else:
+    #         if CEF_COUNTER>CLOSED_EYES_FRAME:
+    #             TOTAL_BLINKS += 1
+    #             color = (0, 200, 0)
+    #             CEF_COUNTER = 0
+    # else:
+    #     img = cv.resize(frame, (1000,1000), interpolation = cv.INTER_AREA)
+        # frame = cv.filter2D(src = frame, ddepth = -1, kernel = kernel)
+        # frame = cv.GaussianBlur(frame, (3,3), cv.BORDER_DEFAULT)
+        # img = cv.resize(frame, (0,0), None, 0.50, 0.50)
+        # imgCurrentFrame = cv.cvtColor(img , cv.COLOR_BGR2RGB)
+        # faceLocCurrentFrame = face_recognition.face_locations(imgCurrentFrame)
+        # encodeCurrentFrame = face_recognition.face_encodings(imgCurrentFrame, faceLocCurrentFrame)
+
+        # for encodeFace, faceLoc in zip(encodeCurrentFrame, faceLocCurrentFrame):
+        #     matches = face_recognition.compare_faces(encodeListKnown, encodeFace)
+        #     faceDis = face_recognition.face_distance(encodeListKnown, encodeFace)   
+        #     matchIndex = np.argmin(faceDis)
+
+        #     if matches[matchIndex]:
+        #         name = classNames[matchIndex].upper()
+        #         y1,x2,y2,x1 = faceLoc
+        #         cv.rectangle(frame, (x1*2, y1*2),(x2*2, y2*2), (0,255,0),2)
+        #         cv.rectangle(frame, (x1*2, y2*2-25),(x2*2, y2*2),(0,255,0), cv.FILLED)
+        #         cv.putText(frame, name, (x1*2 +6, y2*2-2), cv.FONT_HERSHEY_COMPLEX, 1, (255,255,255), 1)
+    cv.imshow('face', fac_img)
     cv.waitKey(1)
