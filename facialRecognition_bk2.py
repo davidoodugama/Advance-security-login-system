@@ -55,7 +55,7 @@ while True:
     ret, frame = cap.read()
     img = cv.resize(frame, (480,480), interpolation = cv.INTER_AREA)
     img, faces = detector.findFaceMesh(frame, draw = False)
-    dec_faces, fac_img = fac_detector.findFaces(img)
+    # dec_faces, fac_img = fac_detector.findFaces(img)
     if faces:
         face = faces[0]
         for id in idList:
