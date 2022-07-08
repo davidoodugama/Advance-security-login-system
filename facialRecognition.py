@@ -76,7 +76,6 @@ while True:
                     (detected_face[10][0]-75,detected_face[10][1]-50),
                     scale = 2)
         if D in range(45, 55):
-            print(D)
             if faces:
                 face = faces[0]
                 for id in idList:
@@ -103,7 +102,28 @@ while True:
                         TOTAL_BLINKS += 1
                         color = (0, 200, 0)
                         CEF_COUNTER = 0
-                putTextRect(img, f'Blink Count: {TOTAL_BLINKS}', (detected_face[10][0]-100,detected_face[10][1]-100), colorR=color)
+                putTextRect(img, f'Blink Count: {TOTAL_BLINKS}', (detected_face[10][0]-100,detected_face[10][1]-100), colorR = color)
+                if TOTAL_BLINKS == 5:
+                    frame = cv.filter2D(src = frame, ddepth = -1, kernel = kernel)
+                    frame = cv.GaussianBlur(frame, (3,3), cv.BORDER_DEFAULT)
+                    img = cv.resize(frame, (0,0), None, 0.50, 0.50)
+                    imgCurrentFrame = cv.cvtColor(img , cv.COLOR_BGR2RGB)
+                    faceLocCurrentFrame = face_recognition.face_locations(imgCurrentFrame)
+                    encodeCurrentFrame = face_recognition.face_encodings(imgCurrentFrame, faceLocCurrentFrame)
+
+                    for encodeFace, faceLoc in zip(encodeCurrentFrame, faceLocCurrentFrame):
+                        matches = face_recognition.compare_faces(encodeListKnown, encodeFace)
+                        faceDis = face_recognition.face_distance(encodeListKnown, encodeFace)   
+                        matchIndex = np.argmin(faceDis)
+
+                        if matches[matchIndex]:
+                            name = classNames[matchIndex].upper()
+                            print(name)
+                            y1,x2,y2,x1 = faceLoc
+                            cv.rectangle(frame, (x1*2, y1*2),(x2*2, y2*2), (0,255,0),2)
+                            cv.rectangle(frame, (x1*2, y2*2-25),(x2*2, y2*2),(0,255,0), cv.FILLED)
+                            cv.putText(frame, name, (x1*2 +6, y2*2-2), cv.FONT_HERSHEY_COMPLEX, 1, (255,255,255), 1)
+
             else:
                 img = cv.resize(frame, (1000,1000), interpolation = cv.INTER_AREA)
         # frame = cv.filter2D(src = frame, ddepth = -1, kernel = kernel)
@@ -124,5 +144,5 @@ while True:
         #         cv.rectangle(frame, (x1*2, y1*2),(x2*2, y2*2), (0,255,0),2)
         #         cv.rectangle(frame, (x1*2, y2*2-25),(x2*2, y2*2),(0,255,0), cv.FILLED)
         #         cv.putText(frame, name, (x1*2 +6, y2*2-2), cv.FONT_HERSHEY_COMPLEX, 1, (255,255,255), 1)
-    cv.imshow('face', img)
+    cv.imshow('face', frame)
     cv.waitKey(1)
