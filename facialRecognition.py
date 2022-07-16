@@ -42,9 +42,10 @@ LEFT_EYEBROW = [ 336, 296, 334, 293, 300, 276, 283, 282, 295, 285 ]
 # right eyes indices
 RIGHT_EYE = [ 33, 7, 163, 144, 145, 153, 154, 155, 133, 173, 157, 158, 159, 160, 161 , 246 ]  
 RIGHT_EYEBROW = [ 70, 63, 105, 66, 107, 55, 65, 52, 53, 46 ]
-idList = [33, 7, 163, 144, 145, 153, 154, 155, 133, 173, 157, 158, 159, 160, 161 , 246]
+# idList = [ 33, 7, 163, 144, 145, 153, 154, 155, 133, 173, 157, 158, 159, 160, 161 , 246 ]
 plotY = LivePlot(800,800,[20,50])
 ratioList = []
+rightRatioList = []
 CEF_COUNTER = 0
 CLOSED_EYES_FRAME = 4
 TOTAL_BLINKS = 0
@@ -78,23 +79,40 @@ while True:
         if D in range(45, 55):
             if faces:
                 face = faces[0]
-                for id in idList:
+                for id in RIGHT_EYE:
                     cv.circle(img, face[id], 5, color, cv.FILLED)
+                for id in LEFT_EYE:
+                    cv.circle(img, face[id], 5, color, cv.FILLED)
+                
                 leftUp = face[159]
                 leftDown = face[23]
                 leftLeft = face[130]
                 leftRight = face[243]
+                # RIGHT
+                rightUp = face[385]
+                rightDown = face[374]
+                rightLeft = face[263]
+                rightRight = face[362]
 
                 lengthVer,_ = detector.findDistance(leftUp, leftDown)
                 lengthHor,_ = detector.findDistance(leftLeft, leftRight)
+                RightlengthVer,_ = detector.findDistance(rightUp, rightDown)
+                RightlengthHor,_ = detector.findDistance(rightLeft, rightRight)
                 cv.line(img, leftUp, leftDown, (0,200,0), 3)
                 cv.line(img, leftLeft, leftRight, (0,200,0), 3)
+                cv.line(img, rightUp, rightDown, (0,200,0), 3)
+                cv.line(img, rightLeft, rightRight, (0,200,0), 3)
+                Rightratio = int((RightlengthVer/RightlengthHor)* 100)
                 ratio = int((lengthVer/lengthHor)* 100)
                 ratioList.append(ratio)
-                if len(ratioList) > 3:
+                rightRatioList.append(Rightratio)
+                if len(ratioList) > 3 and len(rightRatioList) > 3: 
                     ratioList.pop(0)
+                    rightRatioList.pop(0)
                 ratioAvg = sum(ratioList)/len(ratioList)
-                if ratio > 32:
+                RightratioAvg = sum(rightRatioList)/len(rightRatioList)
+
+                if ratioAvg > 34 and RightratioAvg > 29:
                     CEF_COUNTER += 1
                     color = (255, 0, 255)
                 else:
