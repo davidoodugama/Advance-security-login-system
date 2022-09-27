@@ -69,7 +69,7 @@ random_number = random.randint(1, 5)
 time_count = 0
 timer_counter = 0
 start_time = 0
-duration = 60
+duration = 5
 
 def setTimer(timer_counter, start_time):
     timer_counter += 1
@@ -189,6 +189,11 @@ while True:
                                 cv.putText(frame, "Count Down" + str(diff), (0, 70), cv.FONT_HERSHEY_PLAIN, 3, (0,0,255), 3)
                                 if diff >= duration:
                                     timer = False
+                                    diff = 0
+                                    random_number = random.randint(1, 5)
+                                    timer_counter = 0
+                                    start_time = None
+                                    TOTAL_BLINKS = 0
                             if len(lmList) != 0:
                                 fingers = []
                                 
@@ -212,6 +217,8 @@ while True:
                                             cv.putText(frame, "User authenticated as dynamic", (0, 100), cv.FONT_HERSHEY_PLAIN, 2, (0,255,0), 2)
                                         else:
                                             cv.putText(frame, "User not authenticated as dynamic", (0, 100), cv.FONT_HERSHEY_PLAIN, 2, (0,0,255), 2)
+                        # else:
+                        #     img = cv.resize(frame, (1000,1000), interpolation = cv.INTER_AREA)
 
             else:
                 img = cv.resize(frame, (1000,1000), interpolation = cv.INTER_AREA)
